@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Phiếu trả lời trắc nghiệm</title>
+<style>
+body{font-family:Arial;margin:30px}
+.question{margin-top:15px;font-weight:bold}
+button{margin-top:20px;padding:8px 16px}
+@media print{
+  button{display:none}
+  input{border:none}
+}
+</style>
+</head>
+<body>
+
+<h2>PHIẾU TRẢ LỜI TRẮC NGHIỆM</h2>
+
+Họ và tên: <input id="name"><br><br>
+Cấp bậc: <input id="rank"><br><br>
+Đơn vị: <input id="unit"><br><br>
+
+<div id="quiz"></div>
+
+<button onclick="exportPDF()">Xuất PDF kết quả</button>
+
+<script>
+let questions=[];
+
+fetch('questions.json')
+.then(r=>r.json())
+.then(d=>{
+  questions=d;
+  render();
+});
+
+function render(){
+  let html='';
+  questions.forEach((q,i)=>{
+    html+=`<div class="question">${i+1}. ${q.question}</div>`;
+    q.options.forEach(opt=>{
+      html+=`<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label><br>`;
+    });
+  });
+  document.getElementById('quiz').innerHTML=html;
+}
+
+function exportPDF(){
+  let name=document.getElementById('name').value.trim();
+  let rank=document.getElementById('rank').value.trim();
+  let unit=document.getElementById('unit').value.trim();
+
+  let fileName = `${name}_${rank}_${unit}`.replace(/\s+/g,'_');
+  document.title = fileName;
+
+  let content=`
+  <h2>PHIẾU TRẢ LỜI TRẮC NGHIỆM</h2>
+  <p><b>Họ và tên:</b> ${name}</p>
+  <p><b>Cấp bậc:</b> ${rank}</p>
+  <p><b>Đơn vị:</b> ${unit}</p>
+  <hr>
+  `;
+
+  questions.forEach((q,i)=>{
+    let sel=document.querySelector(`input[name="q${i}"]:checked`);
+    content+=`
+      <p><b>${i+1}. ${q.question}</b><br>
+      Trả lời: ${sel?sel.value:"(chưa chọn)"}</p>
+    `;
+  });
+
+  document.body.innerHTML=content;
+
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{
+      alert("Đã lưu PDF. Vui lòng gửi file qua Zalo cho người thu bài.");
+    },800);
+  },300);
+}
+</script>
+
+</body>
+</html>
